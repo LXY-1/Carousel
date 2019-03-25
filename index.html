@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>轮播</title>
+    <style>
+        .carousel-container {
+            width:100%; /*默认*/
+            height: 450px;/*默认*/
+            overflow: hidden;
+        }
+
+        .carousel-container .carousel-wrap{
+            height: 100%;
+            position: relative;
+            transition: all 0.7s ease-in-out;
+        }
+
+        .carousel-container .carousel-wrap .carousel-item {
+            height: 100%;
+            float: left;
+        }
+
+        .carousel-container .carousel-wrap .carousel-item img {
+            width: 100%;
+            height: 100%;
+            border:1px solid #cccccc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div>
+        <div class="carousel-container" id="carousel-container">
+            <!-- ! 不能直接改carousel-item的宽度，它的宽度是相对于carousel-container来计算的，所以如果真的需要控制轮播图片宽度大小的话是直接修改容器的carousel-container的宽度，而carousel-item是百分比的carousel-container宽度大小 .carousel-wrap的宽度是根据carousel-item来计算的，而且采用的是carousel-item的offsetWidth进行计算：算上了padding、border、margin，如果不算margin的话采用其他属性-->
+            <div class="carousel-wrap" id="carousel-wrap">
+                <div class="carousel-item">
+                    <img src="./imgs/1.jpg" alt="轮播" />
+                </div>
+                <div class="carousel-item">
+                    <img src="./imgs/2.jpg" alt="轮播" />
+                </div>
+                <div class="carousel-item">
+                    <img src="./imgs/3.jpg" alt="轮播" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div><button id="left-arrow">左移动</button></div>
+
+    <script>
+    
+    /**
+     * @description:轮播构建函数 
+     * @param {type} 
+     * @return: 
+     */
+    function carousle(option) {
+        // 初始化轮播容器的宽度
+        let carouselWrap = document.getElementById('carousel-wrap');
+        let carouselItem = document.getElementsByClassName('carousel-item');
+        let len = carouselItem.length;
+        let containerWidth =  document.getElementById('carousel-container').offsetWidth;
+        alert(containerWidth);
+        for(let i = 0; i<len ; i++){
+            carouselItem[i].style.width = containerWidth + 'px';
+        }
+        carouselWrap.style.width = containerWidth * len + 'px';
+        alert(carouselWrap.style.width)
+        var letfMove = document.getElementById('left-arrow');
+        letfMove.onclick = function() {
+            carouselWrap.style.left = -containerWidth + 'px'
+            alert(carouselWrap.style.left)
+        }
+        let leftSize = 0; 
+        let count = 1;
+         let s1 = setInterval(()=>{
+           let s2 = setInterval(() => {
+                if(leftSize<=-containerWidth*count){
+                    carouselWrap.style.left = -containerWidth*count + 'px';
+                    clearInterval(s2);
+                    count++;
+                    return;
+                }
+                if(count>=len-1){
+                    clearInterval(s1)
+                }
+                leftSize -= containerWidth/10;
+                console.log(leftSize)
+                carouselWrap.style.left = leftSize + 'px';
+            }, 50);  
+        },5000)
+    }
+    carousle();
+
+    </script>
+</body>
+
+</html>
