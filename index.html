@@ -12,12 +12,13 @@
         *
         */
         .carousel-container {
-            width: 900px;
+            width: 1000px;
             /*默认*/
             height: 450px;
             /*默认*/
             margin: 0 auto;
             overflow: hidden;
+            position: relative;
         }
 
         .carousel-container .carousel-wrap {
@@ -36,6 +37,76 @@
             height: 100%;
             border: 1px solid #cccccc;
             border-radius: 10px;
+        }
+
+        /* /* 切换箭头 */
+        .carousel-container .arrow-wrap {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .carousel-container .arrow-wrap .left-arrow,
+        .carousel-container .arrow-wrap .right-arrow {
+            width: 0px;
+            height: 0px;
+            border-width: 20px;
+            border-style: dashed solid dashed dashed;
+            margin-top: 10px;
+            cursor: pointer;
+
+        }
+
+        .carousel-container .arrow-wrap .left-arrow {
+            border-color: transparent #cccccc transparent transparent;
+            margin-left: -8px;
+            float: left;
+        }
+
+        .carousel-container .arrow-wrap .right-arrow {
+            border-color: transparent transparent transparent #cccccc;
+            margin-right: -8px;
+            float: right;
+        }
+
+        .carousel-container .arrow-wrap .left-arrow:hover {
+            border-color: transparent rebeccapurple transparent transparent;
+        }
+
+        .carousel-container .arrow-wrap .right-arrow:hover {
+            border-color: transparent transparent transparent rebeccapurple;
+        }
+
+        /** /* 轮播分页器 */
+        .pagination-wrap {
+            position: absolute;
+            bottom: 5%;
+            width: 100%;
+            text-align: center;
+        }
+
+        .pagination-wrap .pagination-item {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #000000;
+            opacity: .7;
+            margin-right: 4px;
+            cursor: pointer;
+            transition: all 0.7s ease-in-out;
+        }
+
+        .pagination-wrap .pagination-item:hover {
+            background-color: #007a00;
+            opacity: 1;
+        }
+
+        .pagination-wrap .active {
+            background-color: #007a00;
+            opacity: 1;
         }
     </style>
 </head>
@@ -61,116 +132,393 @@
 
                 <!-- * 最后一个添加一个重复第一张的div结构，以实现无限滚动，默认是开启无限滚动的也就是会在js层加上一个重复第一个item的结构。 -->
             </div>
+            <!--切换的箭头:使用css3来制作-->
+            <div class="arrow-wrap">
+                <div class="left-arrow" id="left-arrow">
+
+                </div>
+                <div class="right-arrow" id="right-arrow">
+
+                </div>
+            </div>
+            <!-- 轮播分页器 -->
+            <div class="pagination-wrap" id="pagination-wrap">
+
+            </div>
         </div>
     </div>
-    <div><button id="left-arrow">左移动</button></div>
 
     <script>
         /**
-         * @description:轮播构建函数 
+         * @description:轮播构建函数 ：里面进行一些必要参数的初始化、参数配置以及相关的轮播需要的功能模块,相关模块划分一个个函数，方便根据函数名来查找对应的功能逻辑代码，方便维护
          * @param {type} 
          * @return: 
          */
+
         function carousle(option) {
-            // 初始化轮播容器的宽度
+
             let optionDefault = {
-                loop: false,
+                loop: true,
+                direction: 'left',
+                arrow: true, //是否使用左右箭头，默认是true
+                pagination: true, // 是否使用分页器，默认是true
+                autoPlay: true
             }
             option = Object.assign(optionDefault, option);
             console.log(option);
+
+            // 初始化轮播容器的宽度
             let carouselWrap = document.getElementById('carousel-wrap');
             let carouselItem = document.getElementsByClassName('carousel-item');
+            let containerWidth = document.getElementById('carousel-container').offsetWidth;
+
+            // 轮播移动动画需要的相关变量
+            let leftSize = 0;
+            let count = 1;
+            let indexVal = 0; //所以根据count计算
+            let isEnd = false;
+            let isFullPic =
+                true; //变量：判断是否一张图片已经完整切换完成了:这里是为了维护：定时切换、左箭头按钮、右箭头按钮直接调用轮播move动画（内部由两个定时器维护)的时候产生的定时器胡乱，就是定时器重叠了。
+
+
             if (option.loop) {
                 // 开启loop模式，所以需要再追加一个同第一个item重复的div结构 
                 let cloneNode = carouselItem[0].cloneNode(true);
                 carouselWrap.appendChild(cloneNode);
 
             }
+            // 轮播的项目个数（包括开启loop模式的时候多添加的一个）
             let len = carouselItem.length;
-            console.log(len);
-            let containerWidth = document.getElementById('carousel-container').offsetWidth;
+            // 判断是否开启分页器，是的话追加分页器dom
+            if (option.pagination) {
+                let num = option.loop ? (len - 1) : len;
+                console.log(num);
+                let paginationWrap = document.getElementById('pagination-wrap');
+                let htmlString = '';
+                for (let i = 0; i < num; i++) {
+                    htmlString += '<span class="pagination-item"></span>';
+
+                }
+                paginationWrap.innerHTML = htmlString;
+            }
+
+            // 设置每一个轮播item的大小，取决于轮播container层
             for (let i = 0; i < len; i++) {
                 carouselItem[i].style.width = containerWidth + 'px';
             }
             carouselWrap.style.width = containerWidth * len + 'px';
-            var letfMove = document.getElementById('left-arrow');
-            // letfMove.onclick = function () {
-            //     carouselWrap.style.left = -containerWidth + 'px'
-            // }
-            let leftSize = 0;
-            let count = 1;
-            let isEnd = false;
-            let s1 = setInterval(() => {
-                if (!isEnd) {
-                    let s2 = setInterval(() => {
-                        //判断是否滚动完了一张
-                        if (leftSize <= -containerWidth * count) {
-                            carouselWrap.style.left = -containerWidth * count + 'px';
-                            count++;
-                            clearInterval(s2);
-                            // 完全到达了最后一张了：或者是到达了loop的重复那一张也就是第一张
-                            // if (count === len + 1) {
-                            //     if (option.loop) {
-                            //         // ?安
-                            //         leftSize = 0; //之后重新开始计时滚动滚动
-                            //         count = 1;
-                            //         carouselWrap.style.left = '0px';
-                            //         console.log(carouselWrap.style.left);
-                            //         return;
-                            //     } else {
-                            //         // 快速滚到第一张
-                            //         alert(0)
-                            //         isEnd = true;
 
-                            //     }
-                            // }
-                            return;
-                        }
-                        console.log(count);
-                        if (count === len) {
-                            // 阻止到终点后错误偏移
-                            clearInterval(s2);
-                            if (option.loop) {
-                                // ?安
-                                leftSize = 0; //之后重新开始计时滚动滚动
-                                count = 1;
-                                carouselWrap.style.left = '0px';
-                                console.log(carouselWrap.style.left);
+
+
+            // 如果是设置自动向右便开始轮播的话，那么一开始是显示最后一周图片，leftsize的值也是轮播item的数目减一再乘以宽度
+            if (option.direction === 'right') {
+                carouselWrap.style.left = -containerWidth * (len - 1) + 'px';
+                leftSize = -containerWidth * (len - 1);
+                count = len;
+                indexVal = option.loop? len - 2:len - 1;
+            }
+
+
+
+            /**
+             * @description:轮播图座移动的：具体移动逻辑控制模块：接收direction参数：可以切换方向进行移动， 
+             * @param {type}：direction 控制方向
+             * @return: 
+             */
+            function move(direction) {
+                let s2, s3; //保存计时器的变量，方便在需要的时候(左右切换的时候)及时销毁相关的计时器。使用s2['0']来判断计时器是否已经被消除
+                console.log(direction);
+
+                if (direction === 'left') {
+                    // 清除上一个定时器的影响
+                    clearInterval(s2);
+                    clearInterval(s3);
+                    if (!isEnd) {
+
+                        /**
+                         * @description: 轮播移动动画效果计时器：控制每隔多少时间：移动多少距离。判断完整移动完一张图片的标指，以及控制loop模式还有非loop模式的实现（非loop模式需要快速切换会第一张所以使用了第三个计时器）
+                         * @param {type} 
+                         * @return: 
+                         */
+                        s2 = setInterval(() => {
+                            console.log('left');
+
+                            // 第一个判断是用于判断是否完整滚动好一张图片，是的话清除计时器s2，以及赋值完整的left（-containerWidth * count + 'px';），以便消除计算出现的误差
+                            if (leftSize <= -containerWidth * count) {
+                                carouselWrap.style.left = -containerWidth * count + 'px';
+                                isFullPic = true;
+                                count++;
+                                clearInterval(s2);
                                 return;
-                            } else {
-                                // 快速滚到第一张
-                                isEnd = true;
-
                             }
-                            return;
-                        }
-                        leftSize -= containerWidth / 10;
-                        // console.log(leftSize)
-                        carouselWrap.style.left = leftSize + 'px';
-                    }, 60);
-                } else {
-                    // !不开启loop且已经滚动到最后一张,此时快速滚动到第一张
-                    var s3 = setInterval(() => {
-                        if (leftSize > -5) {
-                            leftSize = 0;
-                            carouselWrap.style.left = leftSize + 'px';
-                            clearInterval(s3);
-                            isEnd = false;
-                            count = 1;
-                            return;
-                        }
+                            //  第二个判断是用于判断图片到达最后一张的情况，以便进行特殊处理：loop模式处理或者是重新快速的滚动回到第一张图片
+                            if (count === len) {
+                                if (option.loop) {
+                                    //开启无限滚动模式
+                                    leftSize = 0; //之后重新开始计时滚动滚动
+                                    count = 1;
+                                    carouselWrap.style.left = '0px';
+                                    console.log(carouselWrap.style.left);
+                                    // 重新回到第一张明，且完整滚动好一张图片
+                                    isFullPic = true;
+                                    console.log(count);
 
-                        leftSize += containerWidth / 10;
-                        carouselWrap.style.left = leftSize + 'px';
-                    }, 10);
+                                } else {
+                                    // 最外层定时器过时间后快速滚到第一张，下面是设置bol变量
+                                    isEnd = true;
+                                    isFullPic = true;
+                                    clearInterval(s2);
+                                    return;
+
+                                }
+                            }
+                            // 还没有切换到完整的图片
+                            isFullPic = false;
+                            leftSize -= containerWidth / 10;
+                            // console.log(leftSize)
+                            carouselWrap.style.left = leftSize + 'px';
+                        }, 60);
+                    } else {
+                        // !不开启loop且已经滚动到最后一张,此时快速滚动到第一张
+                        s3 = setInterval(() => {
+                            if (leftSize > -5) {
+                                leftSize = 0;
+                                carouselWrap.style.left = leftSize + 'px';
+                                clearInterval(s3);
+                                isEnd = false;
+                                count = 1;
+                                isFullPic = true;
+                                return;
+                            }
+                            isFullPic = false;
+                            leftSize += containerWidth / 10;
+                            carouselWrap.style.left = leftSize + 'px';
+                        }, 10);
+                    }
+                } else {
+                    // 清除上一个定时器的影响
+                    clearInterval(s2);
+                    clearInterval(s3);
+
+                    if (!isEnd) {
+                        /**
+                         * @description: 轮播移动动画效果计时器：控制每隔多少时间：移动多少距离。判断完整移动完一张图片的标指，以及控制loop模式还有非loop模式的实现（非loop模式需要快速切换会第一张所以使用了第三个计时器）右边的范围是：-4500 到 0 ：第6张图片到第一张图片: count 为3的时候：left是-1800 ，，-900 isPublic 共享
+                         * @param {type} 
+                         * @return: 
+                         */
+                        s2 = setInterval(() => {
+                            console.log('right');
+
+                            // 第一个判断是用于判断是否完整滚动好一张图片，是的话清除计时器s2，以及赋值完整的left（-containerWidth * count + 'px';），以便消除计算出现的误差
+                            //  右边切换的loop模式暂时不考虑，也就是到达第一张之后就无法再进行右切换，等待定时器切换或者向左边切换。 第二个判断是用于判断图片到达第一一张的情况，以便进行特殊处理：loop模式处理或者是重新快速的滚动回到第一张图片
+                            if (count === 1) {
+
+                                if (option.loop) {
+                                    //开启无限滚动模式
+                                    leftSize = -containerWidth * (len - 1); //之后重新开始计时滚动滚动
+                                    count = len;
+                                    carouselWrap.style.left = -containerWidth * (len - 1) + 'px';
+                                    console.log(carouselWrap.style.left);
+                                    // 重新回到第一张明，且完整滚动好一张图片
+                                    isFullPic = true;
+                                    console.log(count);
+
+                                } else {
+
+                                    // 最外层定时器过时间后快速滚到第一张，下面是设置bol变量
+                                    isEnd = true;
+                                    isFullPic = true;
+                                    clearInterval(s2);
+                                    return;
+
+                                }
+                                return;
+                            }
+
+                            if (leftSize >= -containerWidth * (count - 2)) {
+                                carouselWrap.style.left = -containerWidth * (count - 2) + 'px';
+                                isFullPic = true;
+                                count--;
+                                clearInterval(s2);
+                                return;
+                            }
+
+                            // 还没有切换到完整的图片
+                            isFullPic = false;
+                            leftSize += containerWidth / 10;
+                            // console.log(leftSize)
+                            carouselWrap.style.left = leftSize + 'px';
+                        }, 60);
+                    } else {
+                        // !不开启loop且已经滚动到最后一张,此时快速滚动到第一张
+                        s3 = setInterval(() => {
+                            if (leftSize < -containerWidth * (len - 1) + 5) {
+                                leftSize = -containerWidth * (len - 1);
+                                carouselWrap.style.left = leftSize + 'px';
+                                clearInterval(s3);
+                                isEnd = false;
+                                count = len;
+                                isFullPic = true;
+                                return;
+                            }
+                            isFullPic = false;
+                            leftSize -= containerWidth / 10;
+                            carouselWrap.style.left = leftSize + 'px';
+                        }, 10);
+                    }
+
+
+
                 }
 
 
-            }, 2000)
+            } // move函数结束：实现轮播动画的左右移动逻辑功能
+
+
+            // 定时轮播
+            if (option.autoPlay) {
+                let s1 = setInterval(() => {
+                    if (isFullPic) {
+                        // 一张图片已经滚动好了可以继续切换
+                        move(option.direction);
+                        if (!isEnd) { // 非loop模式的时候滚动回去，不执行切换
+                            let ind = getInd();
+                            console.log(ind)
+                            paginationActive(ind);
+                        }
+
+                        isFullPic = false;
+                    }
+                }, 3000)
+            }
+
+
+            /*   箭头切换
+             * 01点击做左边切换按钮,需要处理一个问题就是：鼠标点击切换轮播图的防抖动处理：防止快速多次的点击导致轮播图的疯狂切换
+             **所以需要在轮播图图片完整切换好之前禁止鼠标点击
+             ** 02 每次鼠标点击切换之后最外层也就是s1定时器需要重新计时，不能再累加
+             */
+            if (option.arrow) {
+                document.getElementById('right-arrow').onclick = function () {
+                    if (isFullPic) {
+                        // 一张图片已经滚动好了可以继续切换
+                        move('left');
+                        let ind = getInd();
+                        console.log(ind);
+
+                        paginationActive(ind);
+                        isFullPic = false;
+                    }
+
+                }
+
+                document.getElementById('left-arrow').onclick = function () {
+                    if (isFullPic) {
+                        // 一张图片已经滚动好了可以继续切换
+                        move('right');
+                        let ind = getInd();
+                        console.log(ind);
+
+                        paginationActive(ind);
+                        isFullPic = false;
+                    }
+                }
+            }
+
+            // 轮播分页器
+            if (option.pagination) {
+                // 初始化轮播分页器的样式
+                let paginations = document.getElementById('pagination-wrap').getElementsByClassName('pagination-item');
+                if (option.direction === 'left') {
+                    paginations[0].className += ' active';
+                } else {
+                    paginations[indexVal].className += ' active';
+                }
+            }
+            // 轮播分页器样式切换
+            function paginationActive(ind) {
+                let paginations = document.getElementById('pagination-wrap').getElementsByClassName('pagination-item');
+
+                //判断元素是否有active class
+                function hasClass(elements, cName) {
+                    return !!elements.className.match(new RegExp("(\\s|^)" + cName + "(\\s|$)"));
+                }
+                // 删除当前元素的activeClass:先判断是否有对应的className
+                function remove(elements, cName) {
+                    if (hasClass(elements, cName)) {
+                        elements.className = elements.className.replace(new RegExp("(\\s|^)" + cName + "(\\s|$)"),
+                            " "); // replace方法是替换
+                    }
+                }
+
+                //添加className
+                function addClass(elements, cName) {
+                    elements.className = elements.className + ' ' + cName;
+                }
+
+                // 遍历分页器元素删除当前的有active的class
+                for (let i = 0; i < paginations.length; i++) {
+                    remove(paginations[i], 'active');
+
+                }
+
+                // 给当前切换的分页器按钮加上active
+                addClass(paginations[ind], 'active');
+            }
+
+            // 判断下一次轮播分页器的对应索引值
+            function getInd() {
+                if (option.loop) {
+                    // 多出一张：比如4张图片的，现在是五张，且这里count是1-5：所以对应的分页节点索引入戏:
+                    if (option.direction === 'left') {
+                        //   count:1-5 分页节点是：2,3,4 :这里len 与 len-1都是临界状态
+                        indexVal++;
+                        if (indexVal === len - 1) {
+                            indexVal = 0;
+                            return indexVal;
+                        }
+                        console.log(indexVal);
+                        return indexVal;
+
+                    } else {
+                        indexVal--;
+                        if (indexVal === -1) {
+                            indexVal = len - 2;
+                            return indexVal;
+                        }
+                        return indexVal;
+                    }
+                } else {
+                    if (option.direction === 'left') {
+                        indexVal++;
+                        if (indexVal === len) {
+                            indexVal = 0;
+                            return indexVal;
+                        }
+                        console.log(indexVal);
+                        return indexVal;
+                    } else {
+                        indexVal--;
+                        if (indexVal === -1) {
+                            indexVal = len - 1;
+                            return indexVal;
+                        }
+                        return indexVal;
+                    }
+                }
+            }
+
+
+
         }
+
         // 不开启loop
         carousle({
-            loop: false
+            loop: false,
+            direction: 'right',
+            arrow: true, //是否使用左右箭头，默认是true
+            pagination: true, // 是否使用分页器，默认是true
+            autoPlay: true //是否开启定时轮播，默认是true
         });
         // TODO:LOOP配置已经可以了，接下来是左右点击，以及下标圆圈点击。
     </script>
