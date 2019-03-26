@@ -23,7 +23,7 @@
         .carousel-container .carousel-wrap {
             height: 100%;
             position: relative;
-            transition: all 0.7s ease-in-out;
+
         }
 
         .carousel-container .carousel-wrap .carousel-item {
@@ -44,7 +44,7 @@
 
     <div>
         <div class="carousel-container" id="carousel-container">
-            <!-- ! 不能直接改carousel-item的宽度，它的宽度是相对于carousel-container来计算的，所以如果真的需要控制轮播图片宽度大小的话是直接修改容器的carousel-container的宽度，而carousel-item是百分比的carousel-container宽度大小 .carousel-wrap的宽度是根据carousel-item来计算的，而且采用的是carousel-item的offsetWidth进行计算：算上了padding、border、margin，如果不算margin的话采用其他属性-->
+            <!-- ! 不能直接改carousel-item的宽度，它的宽度是相对于carousel-container来计算的，所以如果真的需要控制轮播图片宽度大小的话是直接修改容器的carousel-container的宽度，而carousel-item是百分比的carousel-container宽度大小 .carousel-wrap的宽度是根据carousel-item来计算的，而且采用的是carousel-item的offsetWidth进行计算：算上了padding、border、margin，如果不算margin的话采用其他属性 -->
             <div class="carousel-wrap" id="carousel-wrap">
                 <div class="carousel-item" data-name="name">
                     <img src="./imgs/1.jpg" alt="轮播" />
@@ -74,17 +74,17 @@
         function carousle(option) {
             // 初始化轮播容器的宽度
             let optionDefault = {
-                loop:false,
+                loop: false,
             }
-            option = Object.assign(optionDefault,option);
+            option = Object.assign(optionDefault, option);
             console.log(option);
             let carouselWrap = document.getElementById('carousel-wrap');
             let carouselItem = document.getElementsByClassName('carousel-item');
-            if(option.loop){
-               // 开启loop模式，所以需要再追加一个同第一个item重复的div结构 
-               let cloneNode = carouselItem[0].cloneNode(true);
-               carouselWrap.appendChild(cloneNode);
-               
+            if (option.loop) {
+                // 开启loop模式，所以需要再追加一个同第一个item重复的div结构 
+                let cloneNode = carouselItem[0].cloneNode(true);
+                carouselWrap.appendChild(cloneNode);
+
             }
             let len = carouselItem.length;
             console.log(len);
@@ -93,32 +93,86 @@
                 carouselItem[i].style.width = containerWidth + 'px';
             }
             carouselWrap.style.width = containerWidth * len + 'px';
-            alert(carouselWrap.style.width)
             var letfMove = document.getElementById('left-arrow');
-            letfMove.onclick = function () {
-                carouselWrap.style.left = -containerWidth + 'px'
-                alert(carouselWrap.style.left)
-            }
+            // letfMove.onclick = function () {
+            //     carouselWrap.style.left = -containerWidth + 'px'
+            // }
             let leftSize = 0;
             let count = 1;
+            let isEnd = false;
             let s1 = setInterval(() => {
-                let s2 = setInterval(() => {
-                    if (leftSize <= -containerWidth * count) {
-                        carouselWrap.style.left = -containerWidth * count + 'px';
-                        clearInterval(s2);
-                        count++;
-                        return;
-                    }
-                    if (count >= len - 1) {
-                        clearInterval(s1)
-                    }
-                    leftSize -= containerWidth / 10;
-                    console.log(leftSize)
-                    carouselWrap.style.left = leftSize + 'px';
-                }, 60);
-            }, 5000)
+                if (!isEnd) {
+                    let s2 = setInterval(() => {
+                        //判断是否滚动完了一张
+                        if (leftSize <= -containerWidth * count) {
+                            carouselWrap.style.left = -containerWidth * count + 'px';
+                            count++;
+                            clearInterval(s2);
+                            // 完全到达了最后一张了：或者是到达了loop的重复那一张也就是第一张
+                            // if (count === len + 1) {
+                            //     if (option.loop) {
+                            //         // ?安
+                            //         leftSize = 0; //之后重新开始计时滚动滚动
+                            //         count = 1;
+                            //         carouselWrap.style.left = '0px';
+                            //         console.log(carouselWrap.style.left);
+                            //         return;
+                            //     } else {
+                            //         // 快速滚到第一张
+                            //         alert(0)
+                            //         isEnd = true;
+
+                            //     }
+                            // }
+                            return;
+                        }
+                        console.log(count);
+                        if (count === len) {
+                            // 阻止到终点后错误偏移
+                            clearInterval(s2);
+                            if (option.loop) {
+                                // ?安
+                                leftSize = 0; //之后重新开始计时滚动滚动
+                                count = 1;
+                                carouselWrap.style.left = '0px';
+                                console.log(carouselWrap.style.left);
+                                return;
+                            } else {
+                                // 快速滚到第一张
+                                isEnd = true;
+
+                            }
+                            return;
+                        }
+                        leftSize -= containerWidth / 10;
+                        // console.log(leftSize)
+                        carouselWrap.style.left = leftSize + 'px';
+                    }, 60);
+                } else {
+                    // !不开启loop且已经滚动到最后一张,此时快速滚动到第一张
+                    var s3 = setInterval(() => {
+                        if (leftSize > -5) {
+                            leftSize = 0;
+                            carouselWrap.style.left = leftSize + 'px';
+                            clearInterval(s3);
+                            isEnd = false;
+                            count = 1;
+                            return;
+                        }
+
+                        leftSize += containerWidth / 10;
+                        carouselWrap.style.left = leftSize + 'px';
+                    }, 10);
+                }
+
+
+            }, 2000)
         }
-        carousle({loop:true});
+        // 不开启loop
+        carousle({
+            loop: false
+        });
+        // TODO:LOOP配置已经可以了，接下来是左右点击，以及下标圆圈点击。
     </script>
 </body>
 
