@@ -473,12 +473,13 @@
 
             // 判断下一次轮播分页器的对应索引值
             function getInd() {
-                if (option.loop) {
+                // 获取真实分页节点数目
+                let num = getPaginationNum();
                     // 多出一张：比如4张图片的，现在是五张，且这里count是1-5：所以对应的分页节点索引入戏:
                     if (option.direction === 'left') {
                         //   count:1-5 分页节点是：2,3,4 :这里len 与 len-1都是临界状态
                         indexVal++;
-                        if (indexVal === len - 1) {
+                        if (indexVal === num) {
                             indexVal = 0;
                             return indexVal;
                         }
@@ -488,33 +489,15 @@
                     } else {
                         indexVal--;
                         if (indexVal === -1) {
-                            indexVal = len - 2;
+                            indexVal = num - 1;
                             return indexVal;
                         }
                         return indexVal;
                     }
-                } else {
-                    if (option.direction === 'left') {
-                        indexVal++;
-                        if (indexVal === len) {
-                            indexVal = 0;
-                            return indexVal;
-                        }
-                        console.log(indexVal);
-                        return indexVal;
-                    } else {
-                        indexVal--;
-                        if (indexVal === -1) {
-                            indexVal = len - 1;
-                            return indexVal;
-                        }
-                        return indexVal;
-                    }
-                }
             }
             
             /**
-             * @description:在点击右边切换按钮的时候获取对应的下一个分页节点的ind ,总之点击右边播放按钮是在当前的indexVal基础上加1
+             * @description:点击右边播放按钮的时候，使用上面获取分页节点index出错，下面是专门针对右边按钮点击切换的
              * @param {type} 
              * @return: 
              */
