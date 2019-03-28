@@ -189,9 +189,15 @@
             }
             // 轮播的项目个数（包括开启loop模式的时候多添加的一个）
             let len = carouselItem.length;
+            
+            // 获取实际分页节点个数
+            function getPaginationNum(){
+                return option.loop ? (len - 1) : len;
+            }
+
             // 判断是否开启分页器，是的话追加分页器dom
             if (option.pagination) {
-                let num = option.loop ? (len - 1) : len;
+                let num = getPaginationNum();
                 console.log(num);
                 let paginationWrap = document.getElementById('pagination-wrap');
                 let htmlString = '';
@@ -376,21 +382,21 @@
 
 
             // 定时轮播
-            if (option.autoPlay) {
-                let s1 = setInterval(() => {
-                    if (isFullPic) {
-                        // 一张图片已经滚动好了可以继续切换
-                        move(option.direction);
-                        if (!isEnd) { // 非loop模式的时候滚动回去，不执行切换
-                            let ind = getInd();
-                            console.log(ind)
-                            paginationActive(ind);
-                        }
+            // if (option.autoPlay) {
+            //     let s1 = setInterval(() => {
+            //         if (isFullPic) {
+            //             // 一张图片已经滚动好了可以继续切换
+            //             move(option.direction);
+            //             if (!isEnd) { // 非loop模式的时候滚动回去，不执行切换
+            //                 let ind = getInd();
+            //                 console.log(ind)
+            //                 paginationActive(ind);
+            //             }
 
-                        isFullPic = false;
-                    }
-                }, 3000)
-            }
+            //             isFullPic = false;
+            //         }
+            //     }, 3000)
+            // }
 
 
             /*   箭头切换
@@ -403,9 +409,8 @@
                     if (isFullPic) {
                         // 一张图片已经滚动好了可以继续切换
                         move('left');
-                        let ind = getInd();
+                        let ind = getIndRight();
                         console.log(ind);
-
                         paginationActive(ind);
                         isFullPic = false;
                     }
@@ -507,20 +512,36 @@
                     }
                 }
             }
+            
+            /**
+             * @description:在点击右边切换按钮的时候获取对应的下一个分页节点的ind ,总之点击右边播放按钮是在当前的indexVal基础上加1
+             * @param {type} 
+             * @return: 
+             */
+            function getIndRight() {
+                // 获取实际的分页节点个数
+                let num = getPaginationNum();
+                indexVal++
+                if(indexVal === num ){
+                    indexVal = 0;
+                    return indexVal;
+                }
+                return indexVal;
 
+            }
 
 
         }
 
         // 不开启loop
         carousle({
-            loop: false,
+            loop: true,
             direction: 'right',
             arrow: true, //是否使用左右箭头，默认是true
             pagination: true, // 是否使用分页器，默认是true
             autoPlay: true //是否开启定时轮播，默认是true
         });
-        // TODO:LOOP配置已经可以了，接下来是左右点击，以及下标圆圈点击。
+        // TODO:以及下标圆圈点击，弄好了，整理一下上传github
     </script>
 </body>
 
