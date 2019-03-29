@@ -1,0 +1,101 @@
+  /*
+        * * 可以自定义carousel-container布局来实现轮播的不同布局效果：全屏宽度，或者是居中布局看自己需要，响应式也是可以直接控制这里，因为其他地方的宽度是无法修改的
+        *
+        */
+        .carousel-container {
+            width: 1000px;
+            /*默认*/
+            height: 450px;
+            /*默认*/
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .carousel-container .carousel-wrap {
+            height: 100%;
+            position: relative;
+
+        }
+
+        .carousel-container .carousel-wrap .carousel-item {
+            height: 100%;
+            float: left;
+        }
+
+        .carousel-container .carousel-wrap .carousel-item img {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+        }
+
+        /* /* 切换箭头 */
+        .carousel-container .arrow-wrap {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .carousel-container .arrow-wrap .left-arrow,
+        .carousel-container .arrow-wrap .right-arrow {
+            width: 0px;
+            height: 0px;
+            border-width: 20px;
+            border-style: dashed solid dashed dashed;
+            margin-top: 10px;
+            cursor: pointer;
+
+        }
+
+        .carousel-container .arrow-wrap .left-arrow {
+            border-color: transparent #cccccc transparent transparent;
+            margin-left: -8px;
+            float: left;
+        }
+
+        .carousel-container .arrow-wrap .right-arrow {
+            border-color: transparent transparent transparent #cccccc;
+            margin-right: -8px;
+            float: right;
+        }
+
+        .carousel-container .arrow-wrap .left-arrow:hover {
+            border-color: transparent rebeccapurple transparent transparent;
+        }
+
+        .carousel-container .arrow-wrap .right-arrow:hover {
+            border-color: transparent transparent transparent rebeccapurple;
+        }
+
+        /** /* 轮播分页器 */
+        .pagination-wrap {
+            position: absolute;
+            bottom: 5%;
+            width: 100%;
+            text-align: center;
+        }
+
+        .pagination-wrap .pagination-item {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #000000;
+            opacity: .7;
+            margin-right: 4px;
+            cursor: pointer;
+            transition: all 0.7s ease-in-out;
+        }
+
+        .pagination-wrap .pagination-item:hover {
+            background-color: #007a00;
+            opacity: 1;
+        }
+
+        .pagination-wrap .active {
+            background-color: #007a00;
+            opacity: 1;
+        }
